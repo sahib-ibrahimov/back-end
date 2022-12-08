@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>cryptos</title>
+  </head>
+  <body>
+    <ul>
+
+    </ul>
+  <script>
+    fetch('http://127.0.0.1:3000/api')
+    .then(r => r.json())
+    .then(data => {
+      const ul = document.querySelector('ul');
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.innerText = item.name + ' : ' + item.change;
+        ul.append(li);
+      })
+    })
+    .catch(e => console.error(e.message));
+  </script>
+  </body>
+</html>
