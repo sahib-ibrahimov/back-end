@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title>form</title>
+    <title>register</title>
     <style>
       label {
         display: block;
@@ -10,7 +10,10 @@
     </style>
   </head>
   <body>
-    <form id="form1" action="/" method="get">
+    <form id="form1" action="/register" method="post">
+      <label>
+        name: <input type="text" name="name">
+      </label>
       <label>
         login: <input type="text" name="login">
       </label>
@@ -18,7 +21,10 @@
         password: <input type="password" name="passwd">
       </label>
       <p>
-        <button type="submit">Log In</button>
+        <button type="submit">Sing Up</button>
+      </p>
+      <p>
+        <a href="/login">login</a>
       </p>
     </form>
 

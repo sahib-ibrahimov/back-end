@@ -1,20 +1,67 @@
 const fs = require('fs').promises;
 
-async function getHTML() {
+async function getHTML(fileName) {
   const html = await fs.readFile(
-    `./form.html`, 'utf8'
+    `./${fileName}.html`, 'utf8'
+  );
+  return html;
+}
+
+async function saveUsers(data) {
+  const html = await fs.writeFile(
+    './users.json',
+    JSON.stringify(data),
+    'utf8'
+  );
+  return html;
+}
+
+async function loadUsers() {
+  const html = await fs.readFile(
+    './users.json', 'utf8'
   );
   return html;
 }
 
 const express = require('express');
 const server = express();
+server.use( express.json() );
+server.use( express.urlencoded({extended: true}) );
+
+const users = new Array();
+loadUsers().then(data => {
+  users.push( ...JSON.parse(data) );
+})
+
+server.post('/register', (req, res) => {
+  if(req.body.form) {
+    const user = {...req.body};
+    delete user.form;
+    users.push( user );
+    saveUsers( users );
+    getHTML('login').then(data => res.send(data));
+  } else getHTML('register').then(data => res.send(data));
+})
+
+server.post('/login', (req, res) => {
+  if(req.body.form) {
+    const login = req.body.login;
+    const passwd = req.body.passwd;
+    const user = users.find(user => user.login === login);
+    if(user && (user.passwd === passwd)) {
+      getHTML('profile').then(data => res.send(data));
+    } else {
+      getHTML('login').then(data => res.send(data));
+    }
+  } else getHTML('login').then(data => res.send(data));
+})
 
 server.get('/', (req, res) => {
-  if(req.query.form) {
-    console.log( req.query );
-  }
-  getHTML().then(data => res.send(data));
+  getHTML('login').then(data => res.send(data));
+});
+
+server.get('/:page', (req, res) => {
+  getHTML(req.params.page).then(data => res.send(data));
 });
 
 // server.get('/data', (req, res) => {
