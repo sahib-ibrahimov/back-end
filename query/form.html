@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>form</title>
+    <style>
+      label {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="form1" action="/" method="get">
+      <label>
+        login: <input type="text" name="login">
+      </label>
+      <label>
+        password: <input type="password" name="passwd">
+      </label>
+      <p>
+        <button type="submit">Log In</button>
+      </p>
+    </form>
+
+    <input type="hidden" name="form" form="form1" value="1">
+  </body>
+</html>
