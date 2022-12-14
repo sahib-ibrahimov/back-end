@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 
-async function datData(fileName) {
+async function getData(fileName) {
   const data = await fs.readFile(
     `./${fileName}.json`, 'utf8'
   );
@@ -10,18 +10,27 @@ async function datData(fileName) {
 const express = require('express');
 const server = express();
 
+const data = new Array();
+getData('cryptos')
+.then(load => {
+  data.push( ...JSON.parse(load) );
+})
+
 server.get('/', (req, res) => {
   res.send( 'welcome to Cryptos API' );
 });
 
 server.get('/api', (req, res) => {
-  datData('cryptos')
-  .then(data => {
-    res.set('Content-Type', 'application/json');
-    res.set('Access-Control-Allow-Origin', '*');
-    res.send( data );
-  })
-  .catch(e => res.send('404'));
+  res.set('Access-Control-Allow-Origin', '*');
+  res.json( data );
+});
+
+server.get('/api/:i', (req, res) => {
+  const i = req.params.i;
+  res.set('Access-Control-Allow-Origin', '*');
+  if((0 <= i) && (i < data.length)) {
+    res.json( data[i] );
+  } else res.status(404).send('not found');
 });
 
 server.listen(3000, ()=> {
