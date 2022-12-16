@@ -1,12 +1,10 @@
 const fs = require('fs').promises;
-
 async function getHTML(fileName) {
-  const html = await fs.readFile(
-    `./${fileName}.html`, 'utf8'
-  );
+  const html = await fs.readFile(`./${fileName}.html`, 'utf8');
   return html;
 }
 
+/*
 // async function saveUsers(data) {
 //   const html = await fs.writeFile(
 //     './users.json',
@@ -22,6 +20,7 @@ async function getHTML(fileName) {
 //   );
 //   return html;
 // }
+*/
 
 const express = require('express');
 const server = express();
@@ -36,11 +35,13 @@ const connection = mysql.createConnection({
   password: '',
   database: 'bootcamp'
 });
+
 connection.connect((err) => {
   if(err) console.error(err);
   else console.log('connected');
 });
 
+/*
 // const users = new Array();
 // loadUsers().then(data => {
 //   users.push( ...JSON.parse(data) );
@@ -56,19 +57,39 @@ connection.connect((err) => {
 //     });
 //   };
 // });
+*/
 
 server.delete('/user/:id', (req, res) => {
-  // const id = req.params.id;
+  const id = req.params.id;
   // if((0 <= id) && (id < users.length)) {
   //   users.splice(id, 1);
   //   res.status(202).send();
   // } else {
   //   res.status(404).json({error:'user not found'});
   // }
+  connection.query(`
+    DELETE FROM users WHERE login_id=${id}
+  `,
+  (err, data) => {
+    if(!err) {
+      connection.query(`
+        DELETE FROM logins WHERE id=${id}
+      `,
+      (err, data) => {
+        if(!err) {
+          if(data.affectedRows)
+            getHTML('profile').then(data => res.send(data));
+          else res.status(404).json({error:'user not found'});
+        } else res.status(500).send('error');
+      });
+    } else res.status(500).send('error');
+  });
 })
 
 server.put('/user', (req, res) => {
-  // const id = req.body.id;
+  const id = req.body.id;
+  user = {...req.body};
+  delete user.id;
   // if((0 <= id) && (id < users.length)) {
   //   users[id] = {...users[id], ...req.body};
   //   delete users[id].id;
@@ -76,20 +97,57 @@ server.put('/user', (req, res) => {
   // } else {
   //   res.status(404).json({error:'user not found'});
   // }
+  connection.query(`
+    UPDATE logins SET
+    login='${user.login}', passwd='${user.passwd}'
+    WHERE id=${id}
+  `,
+  (err, data) => {
+    if(!err) {
+      connection.query(`
+        UPDATE users SET
+        name='${user.name}'
+        WHERE login_id=${id}
+      `,
+      (err, data) => {
+        if(!err) {
+          if(data.changedRows)
+            getHTML('profile').then(data => res.send(data));
+          else res.status(404).json({error:'user not found'});
+        } else res.status(500).send('error');
+      });
+    } else res.status(500).send('error');
+  });
 })
 
 server.post('/register', (req, res) => {
-  // if(req.body.form) {
-  //   const user = {...req.body};
-  //   delete user.form;
-  //   users.push( user );
-  //   // saveUsers( users );
-  //   getHTML('login').then(data => res.send(data));
-  // } else getHTML('register').then(data => res.send(data));
+  if(req.body.form) {
+    const user = {...req.body};
+    delete user.form;
+  // users.push( user );
+  // saveUsers( users );
+    connection.query(`
+      INSERT INTO logins (login, passwd)
+      VALUES ('${user.login}', '${user.passwd}')
+    `,
+    (err, data) => {
+      if(!err) {
+        connection.query(`
+          INSERT INTO users (login_id, name)
+          VALUES ('${data.insertId}', '${user.name}')
+        `,
+        (err, data) => {
+          if(!err) getHTML('login').then(data => res.send(data));
+          else res.status(500).send('error');
+        });
+      } else res.status(500).send('error');
+    });
+  } else getHTML('register').then(data => res.send(data));
 })
 
 server.post('/login', (req, res) => {
   if(req.body.form) {
+    /*
     // const login = req.body.login;
     // const passwd = req.body.passwd;
     // connection.query(`SELECT passwd FROM logins WHERE login='${login}'`, (err, data) => {
@@ -108,6 +166,7 @@ server.post('/login', (req, res) => {
     //     res.status(500).send('db error');
     //   }
     // });
+    */
 
     const login = req.body.login;
     const passwd = req.body.passwd;
@@ -118,9 +177,7 @@ server.post('/login', (req, res) => {
           return;
         }
         getHTML('profile').then(data => res.send(data));
-      } else {
-        res.status(500).json(err);
-      }
+      } else res.status(500).json(err);
     });
   } else getHTML('login').then(data => res.send(data));
 })
@@ -132,11 +189,8 @@ server.get('/', (req, res) => {
 server.get('/:page', (req, res) => {
   if(req.params.page === 'users') {
     connection.query('SELECT login_id as id, name, age FROM users', (err, data) => {
-      if(!err) {
-        res.json(data);
-      } else {
-        res.status(500).send('db error');
-      }
+      if(!err) res.json(data);
+      else res.status(500).send('db error');
     });
   } else getHTML(req.params.page)
   .then(data => res.send(data))
@@ -151,6 +205,7 @@ server.get('/user/:id', (req, res) => {
         res.status(404).send('404! user not found');
         return;
       }
+      /*
       // const users = new Array();
       // data.forEach(item => {
       //   const user = new Object();
@@ -159,13 +214,13 @@ server.get('/user/:id', (req, res) => {
       //   user.age = item.age;
       //   users.push(user);
       // });
+      */
       res.json(data);
-    } else {
-      res.status(500).send('db error');
-    }
+    } else res.status(500).send('db error');
   });
 })
 
+/*
 // server.get('/data', (req, res) => {
 //   const a = data.filter( item =>
 //     item.name.toLowerCase().includes(
@@ -189,6 +244,7 @@ server.get('/user/:id', (req, res) => {
 //     res.status(404).send('404 not found');
 //   }
 // });
+*/
 
 server.listen(3000, ()=> {
   console.log('Server is started!');
